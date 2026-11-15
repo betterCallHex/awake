@@ -75,10 +75,13 @@ sips -z 512 512 /tmp/AppIcon.iconset/icon_512x512@2x.png --out docs/icon.png
 
 ## Releasing
 
-1. Bump `CFBundleShortVersionString` (and `CFBundleVersion`) in `Info.plist`
-2. `./release.sh` builds a universal app and packages `dist/Awake-<version>.dmg` with [dmgbuild](https://github.com/dmgbuild/dmgbuild) (run through `uvx`, so you need [uv](https://docs.astral.sh/uv/))
-3. `gh release create v<version> dist/Awake-<version>.dmg`
-4. In [betterCallHex/homebrew-tap](https://github.com/betterCallHex/homebrew-tap), update `version` and `sha256` (`shasum -a 256 dist/Awake-<version>.dmg`) in `Casks/awake.rb`
+Publish a release on GitHub with a `v<version>` tag (for example `gh release create v1.1 --generate-notes`). The [Release workflow](.github/workflows/release.yml) then:
+
+1. Stamps `<version>` into `Info.plist` and runs `./release.sh`, which builds a universal app and packages `dist/Awake-<version>.dmg` with [dmgbuild](https://github.com/dmgbuild/dmgbuild)
+2. Attaches the DMG to the release
+3. Updates `version` and `sha256` in `Casks/awake.rb` in [betterCallHex/homebrew-tap](https://github.com/betterCallHex/homebrew-tap), pushing with the `TAP_DEPLOY_KEY` deploy key
+
+To build a DMG locally, run `./release.sh` (needs [uv](https://docs.astral.sh/uv/)).
 
 The DMG window background is pixel art drawn by [`scripts/make-dmg-background.swift`](scripts/make-dmg-background.swift):
 
