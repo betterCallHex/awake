@@ -5,6 +5,7 @@ final class Updater {
 
     private static let latestReleaseURL = "https://api.github.com/repos/betterCallHex/awake/releases/latest"
     private static let checkInterval: TimeInterval = 24 * 60 * 60
+    private static let schedulerInterval: TimeInterval = 60 * 60
 
     private let defaults = UserDefaults.standard
     private let scheduler = NSBackgroundActivityScheduler(identifier: "local.awake.update-check")
@@ -16,39 +17,48 @@ final class Updater {
         set { defaults.set(newValue, forKey: "updatesAutomatically") }
     }
 
+    private var isCheckDue: Bool {
+        let lastCheck = defaults.object(forKey: "lastUpdateCheck") as? Date ?? .distantPast
+        return Date().timeIntervalSince(lastCheck) >= Self.checkInterval
+    }
+
     func start() {
         guard Self.isEnabledInBuild else { return }
-        scheduler.interval = Self.checkInterval
+        scheduler.interval = Self.schedulerInterval
         scheduler.repeats = true
         scheduler.qualityOfService = .utility
         scheduler.schedule { [weak self] completion in
-            DispatchQueue.main.async { self?.checkAutomatically() }
-            completion(.finished)
+            guard let self else { return completion(.finished) }
+            if self.scheduler.shouldDefer { return completion(.deferred) }
+            DispatchQueue.main.async { self.checkAutomatically { completion(.finished) } }
         }
-        checkAutomatically()
     }
 
     func checkNow() {
         check(reportingToUser: true)
     }
 
-    private func checkAutomatically() {
-        guard updatesAutomatically else { return }
-        check(reportingToUser: false)
+    private func checkAutomatically(then done: @escaping () -> Void) {
+        guard updatesAutomatically, isCheckDue else { return done() }
+        check(reportingToUser: false, then: done)
     }
 
-    private func check(reportingToUser: Bool) {
-        guard !isChecking else { return }
+    private func check(reportingToUser: Bool, then done: @escaping () -> Void = {}) {
+        guard !isChecking else { return done() }
         isChecking = true
         let installedVersion = installedVersion
         DispatchQueue.global(qos: .utility).async {
             let outcome = Self.update(from: installedVersion)
-            DispatchQueue.main.async { self.finishCheck(outcome, reportingToUser: reportingToUser) }
+            DispatchQueue.main.async {
+                self.finishCheck(outcome, reportingToUser: reportingToUser)
+                done()
+            }
         }
     }
 
     private func finishCheck(_ outcome: Outcome, reportingToUser: Bool) {
         isChecking = false
+        if outcome != .failed { defaults.set(Date(), forKey: "lastUpdateCheck") }
         switch outcome {
         case .updated:
             Self.relaunch()
