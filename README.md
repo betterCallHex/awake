@@ -24,7 +24,14 @@
 
 Works on macOS 13 Ventura or later, on Apple Silicon and Intel Macs.
 
-**First launch:** Awake is free and not signed with a paid Apple Developer ID, so macOS will say it *"could not verify Awake"*. Click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway** next to Awake. You only need to do this once.
+### Homebrew
+
+```sh
+brew trust --tap betterCallHex/tap   # Homebrew 7+ only loads taps you trust
+brew install --cask betterCallHex/tap/awake
+```
+
+**First launch (DMG or Homebrew):** Awake is free and not signed with a paid Apple Developer ID, so macOS will say it *"could not verify Awake"*. Click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway** next to Awake. You only need to do this once.
 
 Prefer the Terminal? This does the same thing:
 
@@ -70,6 +77,7 @@ sips -z 512 512 /tmp/AppIcon.iconset/icon_512x512@2x.png --out docs/icon.png
 1. Bump `CFBundleShortVersionString` (and `CFBundleVersion`) in `Info.plist`
 2. `./release.sh` builds a universal app and packages `dist/Awake-<version>.dmg` with [dmgbuild](https://github.com/dmgbuild/dmgbuild) (run through `uvx`, so you need [uv](https://docs.astral.sh/uv/))
 3. `gh release create v<version> dist/Awake-<version>.dmg`
+4. In [betterCallHex/homebrew-tap](https://github.com/betterCallHex/homebrew-tap), update `version` and `sha256` (`shasum -a 256 dist/Awake-<version>.dmg`) in `Casks/awake.rb`
 
 The DMG window background is pixel art drawn by [`scripts/make-dmg-background.swift`](scripts/make-dmg-background.swift):
 
