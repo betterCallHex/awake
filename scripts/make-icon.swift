@@ -47,13 +47,21 @@ func renderIcon(pixels: Int) -> Data {
     NSGraphicsContext.restoreGraphicsState()
 
     NSGraphicsContext.current?.shouldAntialias = false
-    let cell: CGFloat = 40
-    let origin = NSPoint(x: tile.midX - cell * 8, y: tile.midY + cell * 8)
+    let cell: CGFloat = 30
+    let pixels = art.enumerated().flatMap { row, line in
+        line.enumerated().filter { $0.element == "#" }.map { (row: row, column: $0.offset) }
+    }
+    let rows = pixels.map(\.row), columns = pixels.map(\.column)
+    let artWidth = CGFloat(columns.max()! - columns.min()! + 1) * cell
+    let artHeight = CGFloat(rows.max()! - rows.min()! + 1) * cell
+    let left = tile.midX - artWidth / 2, top = tile.midY + artHeight / 2
     ink.setFill()
-    for (row, line) in art.enumerated() {
-        for (column, pixel) in line.enumerated() where pixel == "#" {
-            NSRect(x: origin.x + CGFloat(column) * cell, y: origin.y - CGFloat(row + 1) * cell, width: cell, height: cell).fill()
-        }
+    for pixel in pixels {
+        NSRect(
+            x: left + CGFloat(pixel.column - columns.min()!) * cell,
+            y: top - CGFloat(pixel.row - rows.min()! + 1) * cell,
+            width: cell, height: cell
+        ).fill()
     }
 
     NSGraphicsContext.restoreGraphicsState()
