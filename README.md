@@ -11,8 +11,41 @@
 - **One-click toggle** in the menu bar: a filled cup means awake, an outlined cup means normal sleep
 - **Remembers** whether it was on or off and restores it the next time it starts
 - **Opens at login**; turn that off with right-click → *Open at Login*
-- **Featherweight**: a 150 KB native app (a 62 KB download) using about 11 MB of RAM, with no Electron and no dependencies
+- **Featherweight**: a 150 KB native app (a 62 KB download) using about 12 MB of RAM, with no Electron and no dependencies
 - Uses the same macOS power API as `caffeinate`, so the Mac and the display stay awake while it's on, and quitting always lets the Mac sleep again
+
+## Awake vs. KeepingYouAwake vs. Caffeine
+
+All three keep your Mac awake from the menu bar. Here is what each one costs you:
+
+| | **Awake 1.0** | KeepingYouAwake 1.6.8 | Caffeine 1.1.4 |
+| --- | --- | --- | --- |
+| Download | **62 KB** | 4.5 MB (72× larger) | 828 KB (13× larger) |
+| Size on disk | **150 KB**, 4 files | 7.2 MB, 310 files (48×) | 776 KB, 21 files (5×) |
+| Memory, off | **12 MB** | 13 MB | 16 MB |
+| Memory, on | **12 MB** | 13 MB + 2.3 MB helper process | not measured |
+| CPU while idle | **0.006%** | 0.006% | 1.4–4.1% |
+| CPU wake-ups per second | **0.006** | 0.011 | 10.2 |
+| Extra processes | **none** | starts `caffeinate` while on | none |
+| Bundled frameworks | **none** | Sparkle updater | none |
+
+**Caffeine** redraws its menu bar icon about 10 times a second, even while it's switched off. That keeps a CPU core waking up all day and shows up in Activity Monitor's *Energy* tab. Awake only draws its icon when you click it.
+
+**KeepingYouAwake** is just as quiet at rest as Awake. It's a 48× larger app, though: it ships an auto-updater framework, and it runs a second process (`caffeinate`) while it's on. Awake calls the macOS power API itself.
+
+<details>
+<summary>How these numbers were measured</summary>
+
+On a MacBook with an Apple M4 and 16 GB of RAM, macOS 27.0, on November 15, 2026. Awake was built from this repo with `./release.sh`; the other two came from their official releases (Homebrew's `keepingyouawake` and `caffeine` casks). Each app was launched with default settings, left alone for 15 seconds, then watched for 3 minutes.
+
+- **Download / size on disk**: the size of the release file, and the sum of all file sizes inside the `.app`
+- **Memory**: `footprint -p <pid>`, the same number Activity Monitor shows as *Memory*
+- **CPU and wake-ups**: `top -l 180 -s 1 -pid <pid> -stats cpu,idlew`, averaged over the 3 minutes
+- **Helper process**: `pgrep -P <pid>`, with `footprint` again for its memory
+
+The Caffeine CPU range comes from two separate 3-minute runs. Caffeine's *on* state could not be measured: its "activate on launch" setting didn't turn it on in this test.
+
+</details>
 
 ## Install
 
