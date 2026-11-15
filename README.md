@@ -34,7 +34,7 @@ cd awake
 | Click the cup | Toggle awake on/off |
 | Right-click (or Ctrl-click) | Menu: *Open at Login*, *Quit Awake* |
 
-Awake only blocks idle sleep. Closing the lid or choosing  → Sleep still puts the Mac to sleep.
+Awake only blocks idle sleep. Closing the lid or choosing Apple menu → Sleep still puts the Mac to sleep.
 
 ## App icon
 
