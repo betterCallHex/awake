@@ -1,6 +1,7 @@
 import AppKit
 
-let outputDirectory = CommandLine.arguments[1]
+let source = NSImage(contentsOfFile: CommandLine.arguments[1])!
+let outputDirectory = CommandLine.arguments[2]
 let canvas: CGFloat = 1024
 let tile = NSRect(x: 100, y: 100, width: 824, height: 824)
 
@@ -13,6 +14,7 @@ func renderIcon(pixels: Int) -> Data {
     rep.size = NSSize(width: canvas, height: canvas)
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    NSGraphicsContext.current?.imageInterpolation = .high
 
     let shape = NSBezierPath(roundedRect: tile, xRadius: 185, yRadius: 185)
     NSGraphicsContext.saveGraphicsState()
@@ -25,17 +27,8 @@ func renderIcon(pixels: Int) -> Data {
     shape.fill()
     NSGraphicsContext.restoreGraphicsState()
 
-    NSGradient(
-        starting: NSColor(srgbRed: 0.98, green: 0.69, blue: 0.33, alpha: 1),
-        ending: NSColor(srgbRed: 0.55, green: 0.27, blue: 0.13, alpha: 1)
-    )!.draw(in: shape, angle: -90)
-
-    let config = NSImage.SymbolConfiguration(pointSize: 470, weight: .semibold)
-        .applying(.init(paletteColors: [.white]))
-    let symbol = NSImage(systemSymbolName: "cup.and.saucer.fill", accessibilityDescription: nil)!
-        .withSymbolConfiguration(config)!
-    let origin = NSPoint(x: tile.midX - symbol.size.width / 2, y: tile.midY - symbol.size.height / 2 - 10)
-    symbol.draw(at: origin, from: .zero, operation: .sourceOver, fraction: 1)
+    shape.addClip()
+    source.draw(in: tile, from: .zero, operation: .copy, fraction: 1)
 
     NSGraphicsContext.restoreGraphicsState()
     return rep.representation(using: .png, properties: [:])!
