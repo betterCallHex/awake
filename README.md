@@ -11,7 +11,7 @@
 - **One-click toggle** in the menu bar: a filled cup means awake, an outlined cup means normal sleep
 - **Remembers** whether it was on or off and restores it the next time it starts
 - **Opens at login**; turn that off with right-click → *Open at Login*
-- **Featherweight**: a 150 KB native app (a 62 KB download) using about 12 MB of RAM, with no Electron and no dependencies
+- **Featherweight**: a 92 KB native app (a 52 KB download) using about 12 MB of RAM, with no Electron and no dependencies
 - Uses the same macOS power API as `caffeinate`, so the Mac and the display stay awake while it's on, and quitting always lets the Mac sleep again
 
 ## Awake vs. KeepingYouAwake vs. Caffeine
@@ -20,8 +20,8 @@ All three keep your Mac awake from the menu bar. Here is what each one costs you
 
 | | **Awake 1.0** | KeepingYouAwake 1.6.8 | Caffeine 1.1.4 |
 | --- | --- | --- | --- |
-| Download | **62 KB** | 4.5 MB (72× larger) | 828 KB (13× larger) |
-| Size on disk | **150 KB**, 4 files | 7.2 MB, 310 files (48×) | 776 KB, 21 files (5×) |
+| Download | **52 KB** | 4.5 MB (87× larger) | 828 KB (16× larger) |
+| Size on disk | **92 KB**, 4 files | 7.2 MB, 310 files (78×) | 776 KB, 21 files (8×) |
 | Memory, off | **12 MB** | 13 MB | 16 MB |
 | Memory, on | **12 MB** | 13 MB + 2.3 MB helper process | not measured |
 | CPU while idle | **0.006%** | 0.006% | 1.4–4.1% |
@@ -31,7 +31,7 @@ All three keep your Mac awake from the menu bar. Here is what each one costs you
 
 **Caffeine** redraws its menu bar icon about 10 times a second, even while it's switched off. That keeps a CPU core waking up all day and shows up in Activity Monitor's *Energy* tab. Awake only draws its icon when you click it.
 
-**KeepingYouAwake** is just as quiet at rest as Awake. It's a 48× larger app, though: it ships an auto-updater framework, and it runs a second process (`caffeinate`) while it's on. Awake calls the macOS power API itself.
+**KeepingYouAwake** is just as quiet at rest as Awake. It's a 78× larger app, though: it ships an auto-updater framework, and it runs a second process (`caffeinate`) while it's on. Awake calls the macOS power API itself.
 
 <details>
 <summary>How these numbers were measured</summary>
@@ -96,14 +96,15 @@ Awake only blocks idle sleep. Closing the lid or choosing Apple menu → Sleep s
 
 ## App icon
 
-The icon is 16×16 pixel art drawn in code by [`scripts/make-icon.swift`](scripts/make-icon.swift). To change it, edit the `art` grid there (each `#` is one pixel), then rebuild `Resources/AppIcon.icns`. This needs [oxipng](https://github.com/oxipng/oxipng) (`brew install oxipng`); `scripts/pack-icns.swift` stores the optimised PNGs as they are, where `iconutil` would re-encode them at twice the size:
+The icon is 16×16 pixel art drawn in code by [`scripts/make-icon.swift`](scripts/make-icon.swift). To change it, edit the `art` grid there (each `#` is one pixel), then rebuild `Resources/AppIcon.icns`. This needs [pngquant](https://pngquant.org) and [oxipng](https://github.com/oxipng/oxipng) (`brew install pngquant oxipng`). `make-icon.swift` draws each pixel size once, and `scripts/pack-icns.swift` stores the optimised PNGs as they are, where `iconutil` would re-encode them at twice the size:
 
 ```sh
-mkdir -p /tmp/AppIcon.iconset
-swift scripts/make-icon.swift /tmp/AppIcon.iconset
-oxipng -o max --strip safe /tmp/AppIcon.iconset/*.png
-swift scripts/pack-icns.swift /tmp/AppIcon.iconset Resources/AppIcon.icns
-sips -z 512 512 /tmp/AppIcon.iconset/icon_512x512@2x.png --out docs/icon.png
+mkdir -p /tmp/AppIcon
+swift scripts/make-icon.swift /tmp/AppIcon
+pngquant --quality 95-100 --speed 1 --force --ext .png /tmp/AppIcon/*.png
+oxipng -o max -Z --strip all /tmp/AppIcon/*.png
+swift scripts/pack-icns.swift /tmp/AppIcon Resources/AppIcon.icns
+sips -z 512 512 /tmp/AppIcon/1024.png --out docs/icon.png
 ```
 
 ## Releasing
@@ -121,5 +122,5 @@ The DMG window background is pixel art drawn by [`scripts/make-dmg-background.sw
 ```sh
 swift scripts/make-dmg-background.swift Resources/dmg-background.png 1
 swift scripts/make-dmg-background.swift Resources/dmg-background@2x.png 2
-oxipng -o max --strip safe Resources/dmg-background*.png
+oxipng -o max -Z --strip all Resources/dmg-background*.png
 ```

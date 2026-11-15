@@ -68,9 +68,6 @@ func renderIcon(pixels: Int) -> Data {
     return rep.representation(using: .png, properties: [:])!
 }
 
-for points in [16, 32, 128, 256, 512] {
-    for scale in [1, 2] {
-        let name = scale == 1 ? "icon_\(points)x\(points).png" : "icon_\(points)x\(points)@2x.png"
-        try! renderIcon(pixels: points * scale).write(to: URL(fileURLWithPath: "\(outputDirectory)/\(name)"))
-    }
+for pixels in [16, 32, 64, 128, 256, 512, 1024] {
+    try! renderIcon(pixels: pixels).write(to: URL(fileURLWithPath: "\(outputDirectory)/\(pixels).png"))
 }
