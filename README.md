@@ -96,14 +96,15 @@ Awake only blocks idle sleep. Closing the lid or choosing Apple menu → Sleep s
 
 ## App icon
 
-The icon is 16×16 pixel art drawn in code by [`scripts/make-icon.swift`](scripts/make-icon.swift). To change it, edit the `art` grid there (each `#` is one pixel), then rebuild `Resources/AppIcon.icns`. This needs [oxipng](https://github.com/oxipng/oxipng) (`brew install oxipng`); `scripts/pack-icns.swift` stores the optimised PNGs as they are, where `iconutil` would re-encode them at twice the size:
+The icon is 16×16 pixel art drawn in code by [`scripts/make-icon.swift`](scripts/make-icon.swift). To change it, edit the `art` grid there (each `#` is one pixel), then rebuild `Resources/AppIcon.icns`. This needs [pngquant](https://pngquant.org) and [oxipng](https://github.com/oxipng/oxipng) (`brew install pngquant oxipng`). `make-icon.swift` draws each pixel size once, and `scripts/pack-icns.swift` stores the optimised PNGs as they are, where `iconutil` would re-encode them at twice the size:
 
 ```sh
-mkdir -p /tmp/AppIcon.iconset
-swift scripts/make-icon.swift /tmp/AppIcon.iconset
-oxipng -o max --strip safe /tmp/AppIcon.iconset/*.png
-swift scripts/pack-icns.swift /tmp/AppIcon.iconset Resources/AppIcon.icns
-sips -z 512 512 /tmp/AppIcon.iconset/icon_512x512@2x.png --out docs/icon.png
+mkdir -p /tmp/AppIcon
+swift scripts/make-icon.swift /tmp/AppIcon
+pngquant --quality 95-100 --speed 1 --force --ext .png /tmp/AppIcon/*.png
+oxipng -o max -Z --strip all /tmp/AppIcon/*.png
+swift scripts/pack-icns.swift /tmp/AppIcon Resources/AppIcon.icns
+sips -z 512 512 /tmp/AppIcon/1024.png --out docs/icon.png
 ```
 
 ## Releasing
@@ -121,5 +122,5 @@ The DMG window background is pixel art drawn by [`scripts/make-dmg-background.sw
 ```sh
 swift scripts/make-dmg-background.swift Resources/dmg-background.png 1
 swift scripts/make-dmg-background.swift Resources/dmg-background@2x.png 2
-oxipng -o max --strip safe Resources/dmg-background*.png
+oxipng -o max -Z --strip all Resources/dmg-background*.png
 ```
