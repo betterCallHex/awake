@@ -11,17 +11,17 @@
 - **One-click toggle** in the menu bar: a filled cup means awake, an outlined cup means normal sleep
 - **Remembers** whether it was on or off and restores it the next time it starts
 - **Opens at login**; turn that off with right-click → *Open at Login*
-- **Featherweight**: a 185 KB native app (a 62 KB download) using about 12 MB of RAM, with no Electron and no dependencies
+- **Featherweight**: a 127 KB native app (a 51 KB download) using about 12 MB of RAM, with no Electron and no dependencies
 - Uses the same macOS power API as `caffeinate`, so the Mac and the display stay awake while it's on, and quitting always lets the Mac sleep again
 
 ## Awake vs. KeepingYouAwake vs. Caffeine
 
 All three keep your Mac awake from the menu bar. Here is what each one costs you:
 
-| | **Awake 1.0.1** | KeepingYouAwake 1.6.8 | Caffeine 1.1.4 |
+| | **Awake 1.0.2** | KeepingYouAwake 1.6.8 | Caffeine 1.1.4 |
 | --- | --- | --- | --- |
-| Download | **62 KB** | 4.5 MB (72× larger) | 828 KB (13× larger) |
-| Size on disk | **185 KB**, 4 files | 7.2 MB, 310 files (39×) | 776 KB, 21 files (4×) |
+| Download | **51 KB** | 4.5 MB (88× larger) | 828 KB (16× larger) |
+| Size on disk | **127 KB**, 4 files | 7.2 MB, 310 files (57×) | 776 KB, 21 files (6×) |
 | Memory, off | **12 MB** | 13 MB | 16 MB |
 | Memory, on | **12 MB** | 13 MB + 2.3 MB helper process | not measured |
 | CPU while idle | **0.006%** | 0.006% | 1.4–4.1% |
@@ -31,12 +31,12 @@ All three keep your Mac awake from the menu bar. Here is what each one costs you
 
 **Caffeine** redraws its menu bar icon about 10 times a second, even while it's switched off. That keeps a CPU core waking up all day and shows up in Activity Monitor's *Energy* tab. Awake only draws its icon when you click it.
 
-**KeepingYouAwake** is just as quiet at rest as Awake. It's a 39× larger app, though: it ships an auto-updater framework, and it runs a second process (`caffeinate`) while it's on. Awake calls the macOS power API itself.
+**KeepingYouAwake** is just as quiet at rest as Awake. It's a 57× larger app, though: it ships an auto-updater framework, and it runs a second process (`caffeinate`) while it's on. Awake calls the macOS power API itself.
 
 <details>
 <summary>How these numbers were measured</summary>
 
-On a MacBook with an Apple M4 and 16 GB of RAM, macOS 27.0, on November 15, 2026. Each app came from its official release: the Awake 1.0.1 DMG and Homebrew's `keepingyouawake` and `caffeine` casks. Awake's memory and CPU were measured on the same code built locally; the released 1.0.1 app measured the same 12 MB. Each app was launched with default settings, left alone for 15 seconds, then watched for 3 minutes.
+On a MacBook with an Apple M4 and 16 GB of RAM, macOS 27.0, on November 15, 2026. Each app came from its official release: the Awake 1.0.2 DMG and Homebrew's `keepingyouawake` and `caffeine` casks. Awake's memory and CPU were measured on a local build of 1.0.1; launched side by side, the released 1.0.1 and 1.0.2 apps use the same memory. Each app was launched with default settings, left alone for 15 seconds, then watched for 3 minutes.
 
 - **Download / size on disk**: the size of the release file, and the sum of all file sizes inside the `.app`
 - **Memory**: `footprint -p <pid>`, the same number Activity Monitor shows as *Memory*
