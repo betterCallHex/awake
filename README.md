@@ -4,13 +4,14 @@
 
 <h1 align="center">Awake</h1>
 
-<p align="center">A tiny native macOS menu bar app that keeps your Mac awake.<br>One click. No windows, no Dock icon, ~70 lines of Swift.</p>
+<p align="center">A tiny native macOS menu bar app that keeps your Mac awake.<br>One click. No windows, no Dock icon, ~250 lines of Swift.</p>
 
 ## Features
 
 - **One-click toggle** in the menu bar: a filled cup means awake, an outlined cup means normal sleep
 - **Remembers** whether it was on or off and restores it the next time it starts
 - **Opens at login**; turn that off with right-click → *Open at Login*
+- **Updates itself**: checks GitHub for a new release once a day, installs it and relaunches with your on/off setting kept. Turn that off with right-click → *Update Automatically*
 - **Featherweight**: a 127 KB native app (a 51 KB download) using about 12 MB of RAM, with no Electron and no dependencies
 - Uses the same macOS power API as `caffeinate`, so the Mac and the display stay awake while it's on, and quitting always lets the Mac sleep again
 
@@ -82,7 +83,7 @@ cd awake
 ./install.sh
 ```
 
-`install.sh` builds the app, installs it to `/Applications/Awake.app` and launches it. Run it again to update.
+`install.sh` builds the app, installs it to `/Applications/Awake.app` and launches it. Run it again to update: apps built from source don't update themselves, so a release never overwrites your build.
 `./build.sh` only builds `Awake.app` in the project folder.
 
 ## Usage
@@ -90,7 +91,7 @@ cd awake
 | Action | Result |
 | --- | --- |
 | Click the cup | Toggle awake on/off |
-| Right-click (or Ctrl-click) | Menu: *Open at Login*, *Quit Awake* |
+| Right-click (or Ctrl-click) | Menu: *Open at Login*, *Update Automatically*, *Check for Updates…*, *Quit Awake* |
 
 Awake only blocks idle sleep. Closing the lid or choosing Apple menu → Sleep still puts the Mac to sleep.
 
@@ -111,9 +112,11 @@ sips -z 512 512 /tmp/AppIcon/1024.png --out docs/icon.png
 
 Publish a release on GitHub with a `v<version>` tag (for example `gh release create v1.1 --generate-notes`). The [Release workflow](.github/workflows/release.yml) then:
 
-1. Stamps `<version>` into `Info.plist` and runs `./release.sh`, which builds a universal app and packages `dist/Awake-<version>.dmg` with [dmgbuild](https://github.com/dmgbuild/dmgbuild)
+1. Stamps `<version>` into `Info.plist` and runs `./release.sh`, which builds a universal, self-updating app (`./build.sh --self-updating`) and packages `dist/Awake-<version>.dmg` with [dmgbuild](https://github.com/dmgbuild/dmgbuild)
 2. Attaches the DMG to the release
 3. Updates `version` and `sha256` in `Casks/awake.rb` in [betterCallHex/homebrew-tap](https://github.com/betterCallHex/homebrew-tap), pushing with the `TAP_DEPLOY_KEY` deploy key
+
+Installed copies pick the release up within a day: [`Sources/Updater.swift`](Sources/Updater.swift) asks the GitHub API for the latest release, downloads its `.dmg`, checks that the app inside is Awake at that version with an intact code signature, swaps it in place and relaunches. Every release needs a `v<version>` tag and a `.dmg` asset for this to work.
 
 To build a DMG locally, run `./release.sh` (needs [uv](https://docs.astral.sh/uv/)).
 

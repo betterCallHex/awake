@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let defaults = UserDefaults.standard
     private let loginItem = SMAppService.mainApp
+    private let updater = Updater()
     private var assertionID: IOPMAssertionID = 0
     private var isAwake = false
 
@@ -16,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         enableOpenAtLoginOnFirstLaunch()
         setAwake(defaults.bool(forKey: "isAwake"))
         render()
+        updater.start()
     }
 
     @objc private func handleClick() {
@@ -59,6 +61,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    @objc private func toggleUpdatesAutomatically() {
+        updater.updatesAutomatically.toggle()
+    }
+
+    @objc private func checkForUpdates() {
+        updater.checkNow()
+    }
+
     private func render() {
         let symbol = isAwake ? "cup.and.saucer.fill" : "cup.and.saucer"
         let image = NSImage(systemSymbolName: symbol, accessibilityDescription: isAwake ? "Awake: on" : "Awake: off")
@@ -72,11 +82,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let openAtLogin = menu.addItem(withTitle: "Open at Login", action: #selector(toggleOpenAtLogin), keyEquivalent: "")
         openAtLogin.target = self
         openAtLogin.state = loginItem.status == .enabled ? .on : .off
+        if Updater.isEnabledInBuild { addUpdateItems(to: menu) }
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Awake", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
         statusItem.menu = nil
+    }
+
+    private func addUpdateItems(to menu: NSMenu) {
+        let updatesAutomatically = menu.addItem(withTitle: "Update Automatically", action: #selector(toggleUpdatesAutomatically), keyEquivalent: "")
+        updatesAutomatically.target = self
+        updatesAutomatically.state = updater.updatesAutomatically ? .on : .off
+        menu.addItem(withTitle: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "").target = self
     }
 }
 
