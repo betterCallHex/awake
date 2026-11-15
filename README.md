@@ -16,9 +16,11 @@
 
 ## Install
 
-1. Download **Awake.dmg** from the [latest release](https://github.com/betterCallHex/awake/releases/latest)
+1. Download the **Awake .dmg** from the [latest release](https://github.com/betterCallHex/awake/releases/latest)
 2. Open it and drag **Awake** into **Applications**
 3. Open Awake from Applications. A cup appears in your menu bar.
+
+<img src="docs/install.png" width="520" alt="Install window: drag Awake into Applications">
 
 Works on macOS 13 Ventura or later, on Apple Silicon and Intel Macs.
 
