@@ -3,9 +3,12 @@ set -e
 cd "$(dirname "$0")"
 rm -rf Awake.app
 mkdir -p Awake.app/Contents/MacOS Awake.app/Contents/Resources
-for arch in arm64 x86_64; do
-    swiftc -O -target "$arch-apple-macos13.0" Sources/main.swift -o "/tmp/Awake-$arch"
-done
+swiftc -O -target arm64-apple-macos13.0 Sources/main.swift -o /tmp/Awake-arm64 &
+arm64=$!
+swiftc -O -target x86_64-apple-macos13.0 Sources/main.swift -o /tmp/Awake-x86_64 &
+x86_64=$!
+wait $arm64
+wait $x86_64
 lipo -create /tmp/Awake-arm64 /tmp/Awake-x86_64 -output Awake.app/Contents/MacOS/Awake
 strip -x Awake.app/Contents/MacOS/Awake
 rm /tmp/Awake-arm64 /tmp/Awake-x86_64
