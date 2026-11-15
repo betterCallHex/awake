@@ -1,9 +1,29 @@
 import AppKit
 
-let source = NSImage(contentsOfFile: CommandLine.arguments[1])!
-let outputDirectory = CommandLine.arguments[2]
+let outputDirectory = CommandLine.arguments[1]
 let canvas: CGFloat = 1024
 let tile = NSRect(x: 100, y: 100, width: 824, height: 824)
+let background = NSColor(srgbRed: 0.13, green: 0.12, blue: 0.11, alpha: 1)
+let ink = NSColor(srgbRed: 0.96, green: 0.89, blue: 0.75, alpha: 1)
+
+let art = [
+    "................",
+    "....#..#..#.....",
+    "...#..#..#......",
+    "....#..#..#.....",
+    "...#..#..#......",
+    "................",
+    "..##########....",
+    "..############..",
+    "..##########..#.",
+    "..##########..#.",
+    "..##########..#.",
+    "..############..",
+    "..##########....",
+    "...########.....",
+    ".##############.",
+    "................",
+]
 
 func renderIcon(pixels: Int) -> Data {
     let rep = NSBitmapImageRep(
@@ -14,7 +34,6 @@ func renderIcon(pixels: Int) -> Data {
     rep.size = NSSize(width: canvas, height: canvas)
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-    NSGraphicsContext.current?.imageInterpolation = .high
 
     let shape = NSBezierPath(roundedRect: tile, xRadius: 185, yRadius: 185)
     NSGraphicsContext.saveGraphicsState()
@@ -23,12 +42,19 @@ func renderIcon(pixels: Int) -> Data {
     shadow.shadowBlurRadius = 20
     shadow.shadowOffset = NSSize(width: 0, height: -10)
     shadow.set()
-    NSColor.black.setFill()
+    background.setFill()
     shape.fill()
     NSGraphicsContext.restoreGraphicsState()
 
-    shape.addClip()
-    source.draw(in: tile, from: .zero, operation: .copy, fraction: 1)
+    NSGraphicsContext.current?.shouldAntialias = false
+    let cell: CGFloat = 40
+    let origin = NSPoint(x: tile.midX - cell * 8, y: tile.midY + cell * 8)
+    ink.setFill()
+    for (row, line) in art.enumerated() {
+        for (column, pixel) in line.enumerated() where pixel == "#" {
+            NSRect(x: origin.x + CGFloat(column) * cell, y: origin.y - CGFloat(row + 1) * cell, width: cell, height: cell).fill()
+        }
+    }
 
     NSGraphicsContext.restoreGraphicsState()
     return rep.representation(using: .png, properties: [:])!
