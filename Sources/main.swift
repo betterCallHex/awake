@@ -1,8 +1,11 @@
 import AppKit
 import IOKit.pwr_mgt
+import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+    private let defaults = UserDefaults.standard
+    private let loginItem = SMAppService.mainApp
     private var assertionID: IOPMAssertionID = 0
     private var isAwake = false
 
@@ -10,11 +13,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.button?.target = self
         statusItem.button?.action = #selector(handleClick)
         statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        enableOpenAtLoginOnFirstLaunch()
+        setAwake(defaults.bool(forKey: "isAwake"))
         render()
-    }
-
-    func applicationWillTerminate(_ notification: Notification) {
-        setAwake(false)
     }
 
     @objc private func handleClick() {
@@ -23,6 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             showMenu()
         } else {
             setAwake(!isAwake)
+            defaults.set(isAwake, forKey: "isAwake")
         }
     }
 
@@ -43,6 +45,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         render()
     }
 
+    private func enableOpenAtLoginOnFirstLaunch() {
+        guard !defaults.bool(forKey: "didSetUpOpenAtLogin") else { return }
+        try? loginItem.register()
+        defaults.set(true, forKey: "didSetUpOpenAtLogin")
+    }
+
+    @objc private func toggleOpenAtLogin() {
+        if loginItem.status == .enabled {
+            try? loginItem.unregister()
+        } else {
+            try? loginItem.register()
+        }
+    }
+
     private func render() {
         let symbol = isAwake ? "cup.and.saucer.fill" : "cup.and.saucer"
         let image = NSImage(systemSymbolName: symbol, accessibilityDescription: isAwake ? "Awake: on" : "Awake: off")
@@ -53,6 +69,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showMenu() {
         let menu = NSMenu()
+        let openAtLogin = menu.addItem(withTitle: "Open at Login", action: #selector(toggleOpenAtLogin), keyEquivalent: "")
+        openAtLogin.target = self
+        openAtLogin.state = loginItem.status == .enabled ? .on : .off
+        menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Awake", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
         statusItem.button?.performClick(nil)

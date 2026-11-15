@@ -3,7 +3,9 @@
 Tiny native macOS menu bar app that keeps your Mac awake.
 
 - Click the cup icon to toggle (filled = awake, outline = normal sleep)
-- Right-click for Quit
+- Remembers whether it was on or off and restores it on next launch
+- Opens at login (turn off with right-click → Open at Login)
+- Right-click for Open at Login and Quit
 
 Needs Xcode Command Line Tools (`xcode-select --install`).
 
