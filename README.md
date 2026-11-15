@@ -16,7 +16,23 @@
 
 ## Install
 
-Requires macOS 13+ and the Xcode Command Line Tools (`xcode-select --install`).
+1. Download **Awake.dmg** from the [latest release](https://github.com/betterCallHex/awake/releases/latest)
+2. Open it and drag **Awake** into **Applications**
+3. Open Awake from Applications. A cup appears in your menu bar.
+
+Works on macOS 13 Ventura or later, on Apple Silicon and Intel Macs.
+
+**First launch:** Awake is free and not signed with a paid Apple Developer ID, so macOS will say it *"could not verify Awake"*. Click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway** next to Awake. You only need to do this once.
+
+Prefer the Terminal? This does the same thing:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/Awake.app && open /Applications/Awake.app
+```
+
+### Build from source
+
+Requires the Xcode Command Line Tools (`xcode-select --install`).
 
 ```sh
 git clone https://github.com/betterCallHex/awake.git
@@ -45,4 +61,17 @@ mkdir -p /tmp/AppIcon.iconset
 swift scripts/make-icon.swift /tmp/AppIcon.iconset
 iconutil -c icns /tmp/AppIcon.iconset -o Resources/AppIcon.icns
 sips -z 512 512 /tmp/AppIcon.iconset/icon_512x512@2x.png --out docs/icon.png
+```
+
+## Releasing
+
+1. Bump `CFBundleShortVersionString` (and `CFBundleVersion`) in `Info.plist`
+2. `./release.sh` builds a universal app and packages `dist/Awake-<version>.dmg` with [dmgbuild](https://github.com/dmgbuild/dmgbuild) (run through `uvx`, so you need [uv](https://docs.astral.sh/uv/))
+3. `gh release create v<version> dist/Awake-<version>.dmg`
+
+The DMG window background is pixel art drawn by [`scripts/make-dmg-background.swift`](scripts/make-dmg-background.swift):
+
+```sh
+swift scripts/make-dmg-background.swift Resources/dmg-background.png 1
+swift scripts/make-dmg-background.swift Resources/dmg-background@2x.png 2
 ```

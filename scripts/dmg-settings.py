@@ -1,0 +1,16 @@
+files = ["Awake.app"]
+symlinks = {"Applications": "/Applications"}
+icon = "Resources/AppIcon.icns"
+background = "Resources/dmg-background.png"
+format = "UDZO"
+window_rect = ((200, 200), (540, 380))
+icon_size = 100
+text_size = 13
+hide_extensions = ["Awake.app"]
+icon_locations = {"Awake.app": (130, 170), "Applications": (410, 170)}
+default_view = "icon-view"
+show_status_bar = False
+show_tab_view = False
+show_toolbar = False
+show_pathbar = False
+show_sidebar = False
