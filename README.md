@@ -44,6 +44,8 @@ On a MacBook with an Apple M4 and 16 GB of RAM, macOS 27.0, on November 15, 2026
 - **CPU and wake-ups**: `top -l 180 -s 1 -pid <pid> -stats cpu,idlew`, averaged over the 3 minutes
 - **Helper process**: `pgrep -P <pid>`, with `footprint` again for its memory
 
+`scripts/measure.sh <Awake.dmg>` measures an Awake DMG this way (add `--sizes` for the sizes alone). It runs the app under its own bundle ID, so your installed Awake and its settings are left alone.
+
 The Caffeine CPU range comes from two separate 3-minute runs. Caffeine's *on* state could not be measured: its "activate on launch" setting didn't turn it on in this test.
 
 </details>
@@ -115,6 +117,7 @@ Publish a release on GitHub with a `v<version>` tag (for example `gh release cre
 1. Stamps `<version>` into `Info.plist` and runs `./release.sh`, which builds a universal, self-updating app (`./build.sh --self-updating`) and packages `dist/Awake-<version>.dmg` with [dmgbuild](https://github.com/dmgbuild/dmgbuild)
 2. Attaches the DMG to the release
 3. Updates `version` and `sha256` in `Casks/awake.rb` in [betterCallHex/homebrew-tap](https://github.com/betterCallHex/homebrew-tap), pushing with the `TAP_DEPLOY_KEY` deploy key
+4. Opens a pull request that sets the README's download and size-on-disk numbers to the new DMG's
 
 Installed copies pick the release up within a day: [`Sources/Updater.swift`](Sources/Updater.swift) asks the GitHub API for the latest release, downloads its `.dmg`, checks that the app inside is Awake at that version with an intact code signature, swaps it in place and relaunches. Every release needs a `v<version>` tag and a `.dmg` asset for this to work.
 
