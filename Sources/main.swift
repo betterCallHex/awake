@@ -7,16 +7,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let defaults = UserDefaults.standard
     private let loginItem = SMAppService.mainApp
     private let updater = Updater()
+    private let audioWatch = AudioWatch()
+    private let claudeWatch = ClaudeWatch()
     private var assertionID: IOPMAssertionID = 0
-    private var isAwake = false
+    private var holdsAssertion = false
+    private var isAlwaysAwake = false
+
+    private var awakeWhileAudioPlays: Bool {
+        get { defaults.bool(forKey: "awakeWhileAudioPlays") }
+        set { defaults.set(newValue, forKey: "awakeWhileAudioPlays") }
+    }
+
+    private var awakeWhileClaudeWorks: Bool {
+        get { defaults.bool(forKey: "awakeWhileClaudeWorks") }
+        set { defaults.set(newValue, forKey: "awakeWhileClaudeWorks") }
+    }
+
+    private var isAudioKeepingAwake: Bool { awakeWhileAudioPlays && audioWatch.isPlaying }
+    private var isClaudeKeepingAwake: Bool { awakeWhileClaudeWorks && claudeWatch.isWorking }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem.button?.target = self
         statusItem.button?.action = #selector(handleClick)
         statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        defaults.register(defaults: ["awakeWhileAudioPlays": true, "awakeWhileClaudeWorks": true])
         enableOpenAtLoginOnFirstLaunch()
-        setAwake(defaults.bool(forKey: "isAwake"))
-        render()
+        isAlwaysAwake = defaults.bool(forKey: "isAwake")
+        audioWatch.onChange = { [weak self] in self?.update() }
+        claudeWatch.onChange = { [weak self] in self?.update() }
+        if awakeWhileAudioPlays { audioWatch.start() }
+        if awakeWhileClaudeWorks { claudeWatch.start() }
+        update()
         updater.start()
     }
 
@@ -25,32 +46,49 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true {
             showMenu()
         } else {
-            setAwake(!isAwake)
-            defaults.set(isAwake, forKey: "isAwake")
+            isAlwaysAwake.toggle()
+            defaults.set(isAlwaysAwake, forKey: "isAwake")
+            update()
         }
     }
 
-    private func setAwake(_ awake: Bool) {
-        guard awake != isAwake else { return }
-        if awake {
+    private func update() {
+        holdAssertion(isAlwaysAwake || isAudioKeepingAwake || isClaudeKeepingAwake)
+        render()
+    }
+
+    private func holdAssertion(_ hold: Bool) {
+        guard hold != holdsAssertion else { return }
+        if hold {
             let result = IOPMAssertionCreateWithName(
                 kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
                 IOPMAssertionLevel(kIOPMAssertionLevelOn),
                 "Awake is keeping your Mac awake" as CFString,
                 &assertionID
             )
-            isAwake = result == kIOReturnSuccess
+            holdsAssertion = result == kIOReturnSuccess
         } else {
             IOPMAssertionRelease(assertionID)
-            isAwake = false
+            holdsAssertion = false
         }
-        render()
     }
 
     private func enableOpenAtLoginOnFirstLaunch() {
         guard !defaults.bool(forKey: "didSetUpOpenAtLogin") else { return }
         try? loginItem.register()
         defaults.set(true, forKey: "didSetUpOpenAtLogin")
+    }
+
+    @objc private func toggleAwakeWhileAudioPlays() {
+        awakeWhileAudioPlays.toggle()
+        if awakeWhileAudioPlays { audioWatch.start() } else { audioWatch.stop() }
+        update()
+    }
+
+    @objc private func toggleAwakeWhileClaudeWorks() {
+        awakeWhileClaudeWorks.toggle()
+        if awakeWhileClaudeWorks { claudeWatch.start() } else { claudeWatch.stop() }
+        update()
     }
 
     @objc private func toggleOpenAtLogin() {
@@ -70,15 +108,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func render() {
-        let symbol = isAwake ? "cup.and.saucer.fill" : "cup.and.saucer"
-        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: isAwake ? "Awake: on" : "Awake: off")
+        let image = icon()
         image?.isTemplate = true
         statusItem.button?.image = image
-        statusItem.button?.toolTip = isAwake ? "Keeping your Mac awake — click to stop" : "Click to keep your Mac awake"
+        statusItem.button?.toolTip = toolTip()
+    }
+
+    private func icon() -> NSImage? {
+        if isAlwaysAwake {
+            return NSImage(systemSymbolName: "cup.and.saucer.fill", accessibilityDescription: "Awake: on")
+        }
+        if holdsAssertion {
+            return NSImage(systemSymbolName: "cup.and.heat.waves.fill", accessibilityDescription: "Awake: on automatically")
+                ?? NSImage(systemSymbolName: "cup.and.saucer.fill", accessibilityDescription: "Awake: on automatically")
+        }
+        return NSImage(systemSymbolName: "cup.and.saucer", accessibilityDescription: "Awake: off")
+    }
+
+    private func toolTip() -> String {
+        if isAlwaysAwake { return "Keeping your Mac awake — click to stop" }
+        switch (isAudioKeepingAwake, isClaudeKeepingAwake) {
+        case (true, true): return "Awake while audio plays and Claude works — click to keep your Mac awake"
+        case (true, false): return "Awake while audio plays — click to keep your Mac awake"
+        case (false, true): return "Awake while Claude works — click to keep your Mac awake"
+        case (false, false): return "Click to keep your Mac awake"
+        }
     }
 
     private func showMenu() {
         let menu = NSMenu()
+        addAutomaticItems(to: menu)
+        menu.addItem(.separator())
         let openAtLogin = menu.addItem(withTitle: "Open at Login", action: #selector(toggleOpenAtLogin), keyEquivalent: "")
         openAtLogin.target = self
         openAtLogin.state = loginItem.status == .enabled ? .on : .off
@@ -88,6 +148,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
         statusItem.menu = nil
+    }
+
+    private func addAutomaticItems(to menu: NSMenu) {
+        let whileAudioPlays = menu.addItem(withTitle: "Stay Awake While Audio Plays", action: #selector(toggleAwakeWhileAudioPlays), keyEquivalent: "")
+        whileAudioPlays.target = self
+        whileAudioPlays.state = awakeWhileAudioPlays ? .on : .off
+        let whileClaudeWorks = menu.addItem(withTitle: "Stay Awake While Claude Works", action: #selector(toggleAwakeWhileClaudeWorks), keyEquivalent: "")
+        whileClaudeWorks.target = self
+        whileClaudeWorks.state = awakeWhileClaudeWorks ? .on : .off
     }
 
     private func addUpdateItems(to menu: NSMenu) {

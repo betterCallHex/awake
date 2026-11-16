@@ -4,11 +4,12 @@
 
 <h1 align="center">Awake</h1>
 
-<p align="center">A tiny native macOS menu bar app that keeps your Mac awake.<br>One click. No windows, no Dock icon, ~250 lines of Swift.</p>
+<p align="center">A tiny native macOS menu bar app that keeps your Mac awake.<br>One click, or none: it also wakes up by itself while music plays or Claude works.<br>No windows, no Dock icon, ~450 lines of Swift.</p>
 
 ## Features
 
 - **One-click toggle** in the menu bar: a filled cup means awake, an outlined cup means normal sleep
+- **Turns itself on while you listen or Claude works**: whenever audio is playing (Spotify, Apple Music, YouTube, a call) or a Claude session is working (Claude Code in a terminal, T3 Code, Hooman Studio, or a Cowork task in the Claude app), Awake keeps the Mac and screen awake and shows a steaming cup. It lets go 10 minutes after Claude goes quiet, or as soon as the audio stops. Turn either off from the right-click menu
 - **Remembers** whether it was on or off and restores it the next time it starts
 - **Opens at login**; turn that off with right-click → *Open at Login*
 - **Updates itself**: checks GitHub for a new release once a day, installs it and relaunches with your on/off setting kept. Turn that off with right-click → *Update Automatically*
@@ -86,14 +87,22 @@ cd awake
 ```
 
 `install.sh` builds the app, installs it to `/Applications/Awake.app` and launches it. Run it again to update: apps built from source don't update themselves, so a release never overwrites your build.
-`./build.sh` only builds `Awake.app` in the project folder, as a development copy: it runs under the bundle ID `local.awake.dev`, with its own settings, and never adds itself to your login items, so it can run beside your installed Awake. `scripts/test.sh` runs the updater's tests.
+`./build.sh` only builds `Awake.app` in the project folder, as a development copy: it runs under the bundle ID `local.awake.dev`, with its own settings, and never adds itself to your login items, so it can run beside your installed Awake. `scripts/test.sh` runs the tests.
 
 ## Usage
 
 | Action | Result |
 | --- | --- |
-| Click the cup | Toggle awake on/off |
-| Right-click (or Ctrl-click) | Menu: *Open at Login*, *Update Automatically*, *Check for Updates…*, *Quit Awake* |
+| Click the cup | Toggle *always awake* on/off |
+| Right-click (or Ctrl-click) | Menu: *Stay Awake While Audio Plays*, *Stay Awake While Claude Works*, *Open at Login*, *Update Automatically*, *Check for Updates…*, *Quit Awake* |
+
+| Icon | Meaning |
+| --- | --- |
+| Outlined cup | Normal sleep |
+| Steaming cup | Awake for now, because audio is playing or Claude is working |
+| Cup on a saucer | Always awake, until you click it again |
+
+Awake notices audio through the same macOS signal that tells the system a speaker is in use, and Claude through the session transcripts Claude writes to `~/.claude/projects` (and the Claude app's Cowork folder) while it works. Both are event-driven, so Awake still never polls. A chat in the Claude app that isn't a Cowork task writes nothing to disk, so it doesn't count.
 
 Awake only blocks idle sleep. Closing the lid or choosing Apple menu → Sleep still puts the Mac to sleep.
 
