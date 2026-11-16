@@ -13,7 +13,7 @@
 - **Remembers** whether it was on or off and restores it the next time it starts
 - **Opens at login**; turn that off with right-click → *Open at Login*
 - **Updates itself**: checks GitHub for a new release once a day, installs it and relaunches with your on/off setting kept. Turn that off with right-click → *Update Automatically*
-- **Featherweight**: a 221 KB native app (a 79 KB download) using about 12 MB of RAM, with no Electron and no dependencies
+- **Featherweight**: a 221 KB native app (a 79 KB download) using about 13 MB of RAM, with no Electron and no dependencies
 - Uses the same macOS power API as `caffeinate`, so the Mac and the display stay awake while it's on, and quitting always lets the Mac sleep again
 
 ## Awake vs. KeepingYouAwake vs. Caffeine
@@ -24,8 +24,8 @@ All three keep your Mac awake from the menu bar. Here is what each one costs you
 | --- | --- | --- | --- |
 | Download | **79 KB** | 4.5 MB (57× larger) | 828 KB (11× larger) |
 | Size on disk | **221 KB**, 4 files | 7.2 MB, 310 files (33×) | 776 KB, 21 files (4×) |
-| Memory, off | **12 MB** | 13 MB | 16 MB |
-| Memory, on | **12 MB** | 13 MB + 2.3 MB helper process | not measured |
+| Memory, off | **13 MB** | 13 MB | 16 MB |
+| Memory, on | **13 MB** | 13 MB + 2.3 MB helper process | not measured |
 | CPU while idle | **0.006%** | 0.006% | 1.4–4.1% |
 | CPU wake-ups per second | **0.006** | 0.011 | 10.2 |
 | Extra processes | **none** | starts `caffeinate` while on | none |
@@ -38,7 +38,7 @@ All three keep your Mac awake from the menu bar. Here is what each one costs you
 <details>
 <summary>How these numbers were measured</summary>
 
-On a MacBook with an Apple M4 and 16 GB of RAM, macOS 27.0, on November 15, 2026. Each app came from its official release: the Awake 1.2 DMG and Homebrew's `keepingyouawake` and `caffeine` casks. Awake's memory and CPU were measured on a local build of 1.0.1. Launched side by side, the released 1.0.1 and 1.0.2 apps use the same memory, and a local build of 1.1 matched 1.0.2's memory, CPU and wake-ups. Each app was launched with default settings, left alone for 15 seconds, then watched for 3 minutes.
+On a MacBook with an Apple M4 and 16 GB of RAM, macOS 27.0, on November 15, 2026. Each app came from its official release: the Awake 1.2 DMG and Homebrew's `keepingyouawake` and `caffeine` casks. Awake's memory was measured on the 1.2 DMG on November 16, 2026, with Awake watching for audio and Claude as it does by default; 1.2 links CoreAudio for that, which costs about 1 MB over 1.1.2. Awake's CPU and wake-ups were measured on a local build of 1.0.1. Launched side by side, the released 1.0.1 and 1.0.2 apps use the same memory, a local build of 1.1 matched 1.0.2's memory, CPU and wake-ups, and the 1.2 DMG measured 0.007% CPU and no wake-ups. Each app was launched with default settings, left alone for 15 seconds, then watched for 3 minutes.
 
 - **Download / size on disk**: the size of the release file, and the sum of all file sizes inside the `.app`
 - **Memory**: `footprint -p <pid>`, the same number Activity Monitor shows as *Memory*
