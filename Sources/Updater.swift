@@ -73,7 +73,7 @@ final class Updater {
 
     private static func update(from installedVersion: String) -> Outcome {
         guard let release = latestRelease() else { return .failed }
-        guard release.version.compare(installedVersion, options: .numeric) == .orderedDescending else { return .upToDate }
+        guard isNewer(release.version, than: installedVersion) else { return .upToDate }
         return install(release) ? .updated : .failed
     }
 
@@ -84,7 +84,15 @@ final class Updater {
               let assets = release["assets"] as? [[String: Any]],
               let diskImage = assets.first(where: { ($0["name"] as? String)?.hasSuffix(".dmg") == true }),
               let diskImageURL = diskImage["browser_download_url"] as? String else { return nil }
-        return (tag.hasPrefix("v") ? String(tag.dropFirst()) : tag, diskImageURL)
+        return (version(fromTag: tag), diskImageURL)
+    }
+
+    static func version(fromTag tag: String) -> String {
+        tag.hasPrefix("v") ? String(tag.dropFirst()) : tag
+    }
+
+    static func isNewer(_ version: String, than installedVersion: String) -> Bool {
+        version.compare(installedVersion, options: .numeric) == .orderedDescending
     }
 
     private static func install(_ release: (version: String, diskImageURL: String)) -> Bool {
