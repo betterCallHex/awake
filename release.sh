@@ -6,5 +6,5 @@ DMG="dist/Awake-$VERSION.dmg"
 ./build.sh --self-updating
 mkdir -p dist
 rm -f "$DMG"
-uvx dmgbuild -s scripts/dmg-settings.py "Awake" "$DMG"
+uvx dmgbuild==1.6.7 -s scripts/dmg-settings.py "Awake" "$DMG"
 echo "Created $(pwd)/$DMG"
