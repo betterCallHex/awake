@@ -84,7 +84,7 @@ cd awake
 ```
 
 `install.sh` builds the app, installs it to `/Applications/Awake.app` and launches it. Run it again to update: apps built from source don't update themselves, so a release never overwrites your build.
-`./build.sh` only builds `Awake.app` in the project folder.
+`./build.sh` only builds `Awake.app` in the project folder, as a development copy: it runs under the bundle ID `local.awake.dev`, with its own settings, and never adds itself to your login items, so it can run beside your installed Awake. `scripts/test.sh` runs the updater's tests.
 
 ## Usage
 

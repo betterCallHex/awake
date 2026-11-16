@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 cd "$(dirname "$0")"
-./build.sh
+./build.sh --installable
 pkill -x Awake || true
 rm -rf /Applications/Awake.app
 cp -R Awake.app /Applications/
