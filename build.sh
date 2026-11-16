@@ -5,9 +5,9 @@ slices=$(mktemp -d)
 trap 'rm -r "$slices"' EXIT
 rm -rf Awake.app
 mkdir -p Awake.app/Contents/MacOS Awake.app/Contents/Resources
-swiftc -O -warnings-as-errors -Xlinker -no_data_const -target arm64-apple-macos13.0 Sources/*.swift -o "$slices/arm64" &
+swiftc -Osize -wmo -warnings-as-errors -Xfrontend -disable-reflection-metadata -Xlinker -no_data_const -Xlinker -dead_strip -Xlinker -no_function_starts -target arm64-apple-macos13.0 Sources/*.swift -o "$slices/arm64" &
 arm64=$!
-swiftc -O -warnings-as-errors -Xlinker -no_data_const -target x86_64-apple-macos13.0 Sources/*.swift -o "$slices/x86_64" &
+swiftc -Osize -wmo -warnings-as-errors -Xfrontend -disable-reflection-metadata -Xlinker -no_data_const -Xlinker -dead_strip -Xlinker -no_function_starts -target x86_64-apple-macos13.0 Sources/*.swift -o "$slices/x86_64" &
 x86_64=$!
 wait $arm64
 wait $x86_64
