@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.3
+
+      - name: Test the updater
+        run: scripts/test.sh
+
+      - name: Build the dev app
+        run: ./build.sh
+
+      - name: Build the release DMG
+        run: ./release.sh
+
+      - name: Check the README still takes the release's sizes
+        run: |
+          eval "$(scripts/measure.sh --sizes dist/Awake-*.dmg)"
+          python3 scripts/update-readme-sizes.py "$version" "$download_bytes" "$app_bytes" "$app_files"

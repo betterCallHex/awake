@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   release:
@@ -49,3 +50,19 @@ jobs:
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -am "awake $VERSION"
           git push
+
+      - name: Open a PR with the release's sizes in the README
+        run: |
+          eval "$(scripts/measure.sh --sizes "dist/Awake-$VERSION.dmg")"
+          BRANCH="docs/release-$VERSION-size"
+          git checkout -- Info.plist
+          git fetch --depth 1 origin main
+          git switch -c "$BRANCH" FETCH_HEAD
+          python3 scripts/update-readme-sizes.py "$VERSION" "$download_bytes" "$app_bytes" "$app_files"
+          git diff --exit-code --quiet README.md && exit 0
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "docs: match the README sizes to the Awake $VERSION release" README.md
+          git push origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" \
+            --title "docs: match the README sizes to the Awake $VERSION release" \
+            --body "Download and size-on-disk numbers measured from \`Awake-$VERSION.dmg\` by \`scripts/measure.sh --sizes\`. Memory and CPU stay as measured by hand: run \`scripts/measure.sh\` on a Mac to refresh them."
